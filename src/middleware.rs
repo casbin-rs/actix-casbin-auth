@@ -5,7 +5,7 @@ use actix_service::{Service, Transform};
 use actix_web::{dev::ServiceRequest, dev::ServiceResponse, Error, HttpMessage, HttpResponse};
 use futures::future::{ok, Ready};
 use futures::Future;
-use std::ops::{ Deref, DerefMut };
+use std::ops::{Deref, DerefMut};
 
 use casbin::prelude::{Enforcer, TryIntoAdapter, TryIntoModel};
 use casbin::CoreApi;
@@ -31,10 +31,7 @@ pub struct CasbinService {
 }
 
 impl CasbinService {
-    pub async fn new<M: TryIntoModel, A: TryIntoAdapter>(
-        m: M,
-        a: A,
-    ) -> Self {
+    pub async fn new<M: TryIntoModel, A: TryIntoAdapter>(m: M, a: A) -> Self {
         let enforcer: Enforcer = Enforcer::new(m, a).await.unwrap();
         CasbinService {
             enforcer: Arc::new(RwLock::new(enforcer)),
@@ -72,7 +69,6 @@ impl Deref for CasbinService {
 }
 
 impl DerefMut for CasbinService {
-
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.enforcer
     }

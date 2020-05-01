@@ -10,8 +10,6 @@ use futures::future::{ok, Future, Ready};
 use actix_casbin_auth::{CasbinService, CasbinVals};
 
 use actix_web::{test, web, App};
-use casbin::function_map::key_match2;
-use casbin::CoreApi;
 use casbin::{DefaultModel, FileAdapter};
 
 pub struct FakeAuth;
@@ -61,7 +59,7 @@ where
         Box::pin(async move {
             let vals = CasbinVals {
                 subject: String::from("alice"),
-                domain: None,
+                domain: Option::from(String::from("domain1")),
             };
             req.extensions_mut().insert(vals);
             let res = svc.call(req).await;
@@ -72,25 +70,19 @@ where
 
 #[actix_rt::test]
 async fn test_middleware() {
-    let m = DefaultModel::from_file("examples/rbac_with_pattern_model.conf")
+    let m = DefaultModel::from_file("examples/rbac_with_domains_model.conf")
         .await
         .unwrap();
-    let a = FileAdapter::new("examples/rbac_with_pattern_policy.csv");
+    let a = FileAdapter::new("examples/rbac_with_domains_policy.csv");
 
     let casbin_middleware = CasbinService::new(m, a).await;
-
-    casbin_middleware
-        .write()
-        .await
-        .add_matching_fn(key_match2)
-        .unwrap();
 
     let mut app = test::init_service(
         App::new()
             .wrap(casbin_middleware)
             .wrap(FakeAuth)
             .route("/pen/1", web::get().to(|| HttpResponse::Ok()))
-            .route("/book/{id}", web::get().to(|| HttpResponse::Ok())),
+            .route("/book/1", web::get().to(|| HttpResponse::Ok())),
     )
     .await;
 
@@ -98,7 +90,7 @@ async fn test_middleware() {
     let resp_pen = test::call_service(&mut app, req_pen).await;
     assert!(resp_pen.status().is_success());
 
-    let req_book = test::TestRequest::get().uri("/book/2").to_request();
+    let req_book = test::TestRequest::get().uri("/book/1").to_request();
     let resp_book = test::call_service(&mut app, req_book).await;
-    assert!(resp_book.status().is_success());
+    assert!(!resp_book.status().is_success());
 }
