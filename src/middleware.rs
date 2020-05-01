@@ -101,35 +101,45 @@ where
         Box::pin(async move {
             let path = req.path().to_string();
             let action = req.method().as_str().to_string();
-            let vals = req
-                .extensions()
-                .get::<CasbinVals>()
-                .map(|x| x.to_owned())
-                .unwrap();
+            let option_vals = req.extensions().get::<CasbinVals>().map(|x| x.to_owned());
+            let vals = match option_vals {
+                Some(value) => value,
+                None => {
+                    return Ok(req.into_response(HttpResponse::Unauthorized().finish().into_body()))
+                }
+            };
             let subject = &vals.subject;
 
             if !vals.subject.is_empty() {
                 if let Some(domain) = &vals.domain {
                     let mut lock = cloned_enforcer.write().await;
-                    if lock
-                        .enforce(&[subject, domain, &path, &action])
-                        .await
-                        .unwrap()
-                    {
-                        let fut_res = srv.call(req);
-                        let res = fut_res.await;
-                        res
-                    } else {
-                        Ok(req.into_response(HttpResponse::Forbidden().finish().into_body()))
+                    match lock.enforce(&[subject, domain, &path, &action]).await {
+                        Ok(true) => {
+                            let fut_res = srv.call(req);
+                            let res = fut_res.await;
+                            res
+                        }
+                        Ok(false) => {
+                            Ok(req.into_response(HttpResponse::Forbidden().finish().into_body()))
+                        }
+                        Err(_) => {
+                            Ok(req.into_response(HttpResponse::BadGateway().finish().into_body()))
+                        }
                     }
                 } else {
                     let mut lock = cloned_enforcer.write().await;
-                    if lock.enforce(&[subject, &path, &action]).await.unwrap() {
-                        let fut_res = srv.call(req);
-                        let res = fut_res.await;
-                        res
-                    } else {
-                        Ok(req.into_response(HttpResponse::Forbidden().finish().into_body()))
+                    match lock.enforce(&[subject, &path, &action]).await {
+                        Ok(true) => {
+                            let fut_res = srv.call(req);
+                            let res = fut_res.await;
+                            res
+                        }
+                        Ok(false) => {
+                            Ok(req.into_response(HttpResponse::Forbidden().finish().into_body()))
+                        }
+                        Err(_) => {
+                            Ok(req.into_response(HttpResponse::BadGateway().finish().into_body()))
+                        }
                     }
                 }
             } else {
