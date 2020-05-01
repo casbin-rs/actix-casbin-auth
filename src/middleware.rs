@@ -5,9 +5,10 @@ use actix_service::{Service, Transform};
 use actix_web::{dev::ServiceRequest, dev::ServiceResponse, Error, HttpMessage, HttpResponse};
 use futures::future::{ok, Ready};
 use futures::Future;
+use std::ops::{ Deref, DerefMut };
 
 use casbin::prelude::{Enforcer, TryIntoAdapter, TryIntoModel};
-use casbin::{CoreApi, Result as CasbinBuiltinResult};
+use casbin::CoreApi;
 use std::sync::Arc;
 
 #[cfg(feature = "runtime-tokio")]
@@ -21,8 +22,8 @@ use std::rc::Rc;
 
 #[derive(Clone)]
 pub struct CasbinVals {
-    subject: String,
-    domain: Option<String>,
+    pub subject: String,
+    pub domain: Option<String>,
 }
 
 pub struct CasbinService {
@@ -33,11 +34,11 @@ impl CasbinService {
     pub async fn new<M: TryIntoModel, A: TryIntoAdapter>(
         m: M,
         a: A,
-    ) -> CasbinBuiltinResult<CasbinService> {
-        let enforcer: Enforcer = Enforcer::new(m, a).await?;
-        Ok(CasbinService {
+    ) -> Self {
+        let enforcer: Enforcer = Enforcer::new(m, a).await.unwrap();
+        CasbinService {
             enforcer: Arc::new(RwLock::new(enforcer)),
-        })
+        }
     }
 }
 
@@ -59,6 +60,21 @@ where
             enforcer: self.enforcer.clone(),
             service: Rc::new(RefCell::new(service)),
         })
+    }
+}
+
+impl Deref for CasbinService {
+    type Target = Arc<RwLock<Enforcer>>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.enforcer
+    }
+}
+
+impl DerefMut for CasbinService {
+
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.enforcer
     }
 }
 
@@ -92,7 +108,7 @@ where
             let vals = req
                 .extensions()
                 .get::<CasbinVals>()
-                .map(|x| x.clone())
+                .map(|x| x.to_owned())
                 .unwrap();
             let subject = &vals.subject;
 
