@@ -5,7 +5,28 @@ authors = ["Eason Chai <hackerchai.com@gmail.com>","Cheng JIANG <jiang.cheng@vip
 edition = "2018"
 license = "Apache-2.0"
 description = "Casbin actix-web access control middleware"
-homepage="https://github.com/casbin-rs/actix-casbin-auth"
-readme="README.md"
+homepage= "https://github.com/casbin-rs/actix-casbin-auth"
+readme= "README.md"
+
+[lib]
+name = "actix_casbin_auth"
+path = "src/lib.rs"
 
 [dependencies]
+casbin = { version = "0.6.1", default-features = false, optional = true }
+tokio = { version = "0.2.19", default-features = false, optional = true }
+async-std = { version = "1.5.0", default-features = false, optional = true }
+actix-web = "2.0.0"
+actix-service = "1.0.5"
+futures = "0.3.4"
+
+[features]
+default = ["runtime-tokio"]
+
+runtime-tokio = ["casbin/runtime-tokio", "tokio/sync"]
+runtime-async-std = ["casbin/runtime-async-std", "async-std/std"]
+
+[dev-dependencies]
+tokio = { version = "0.2.19", features = [ "full" ] }
+async-std = { version = "1.5.0", features = [ "attributes" ] }
+actix-rt = "1.1.0"
