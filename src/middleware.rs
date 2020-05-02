@@ -26,6 +26,7 @@ pub struct CasbinVals {
     pub domain: Option<String>,
 }
 
+#[derive(Clone)]
 pub struct CasbinService {
     enforcer: Arc<RwLock<Enforcer>>,
 }
