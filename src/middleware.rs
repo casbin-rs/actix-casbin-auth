@@ -1,3 +1,5 @@
+#![allow(clippy::type_complexity)]
+
 use std::pin::Pin;
 use std::task::{Context, Poll};
 
@@ -117,8 +119,7 @@ where
                     match lock.enforce(&[subject, domain, &path, &action]).await {
                         Ok(true) => {
                             let fut_res = srv.call(req);
-                            let res = fut_res.await;
-                            res
+                            fut_res.await
                         }
                         Ok(false) => {
                             Ok(req.into_response(HttpResponse::Forbidden().finish().into_body()))
@@ -132,8 +133,7 @@ where
                     match lock.enforce(&[subject, &path, &action]).await {
                         Ok(true) => {
                             let fut_res = srv.call(req);
-                            let res = fut_res.await;
-                            res
+                            fut_res.await
                         }
                         Ok(false) => {
                             Ok(req.into_response(HttpResponse::Forbidden().finish().into_body()))
