@@ -2,7 +2,7 @@
 
 [![Crates.io](https://meritbadge.herokuapp.com/actix-casbin-auth)](https://crates.io/crates/actix-casbin-auth)
 [![Docs](https://docs.rs/actix-casbin-auth/badge.svg)](https://docs.rs/actix-casbin-auth)
-[![Auto Build](https://github.com/casbin-rs/actix-casbin-auth/workflows/Auto%20Build/badge.svg)(https://github.com/casbin-rs/actix-casbin-auth/actions)
+[![Auto Build](https://github.com/casbin-rs/actix-casbin-auth/workflows/Auto%20Build/badge.svg)](https://github.com/casbin-rs/actix-casbin-auth/actions)
 [![codecov](https://codecov.io/gh/casbin-rs/actix-casbin-auth/branch/master/graph/badge.svg)](https://codecov.io/gh/casbin-rs/actix-casbin-auth)
 
 [Casbin](https://github.com/casbin/casbin-rs) access control middleware for [actix-web](https://github.com/actix/actix-web) framework
