@@ -1,1 +1,143 @@
-# actix-casbin-auth
+# Actix Casbin Middleware
+
+[![Crates.io](https://meritbadge.herokuapp.com/actix-casbin-auth)](https://crates.io/crates/actix-casbin-auth)
+[![Docs](https://docs.rs/actix-casbin-auth/badge.svg)](https://docs.rs/actix-casbin-auth)
+[![Build Status](https://travis-ci.org/casbin-rs/actix-casbin-auth.svg?branch=master)](https://travis-ci.org/casbin-rs/actix-casbin-auth)
+[![codecov](https://codecov.io/gh/casbin-rs/actix-casbin-auth/branch/master/graph/badge.svg)](https://codecov.io/gh/casbin-rs/actix-casbin-auth)
+
+[Casbin](https://github.com/casbin/casbin-rs) access control middleware for [actix-web](https://github.com/actix/actix-web) framework
+
+## Install
+
+Add it to `Cargo.toml`
+
+```rust
+casbin = { version = "0.6.2", default-features = false }
+actix-casbin-auth = "0.1.0"
+actix-rt = "1.1.0"
+actix-web = "2.0.0"
+```
+
+# Requirement
+
+**Casbin only takes charge of permission control**, so you need to implement an `Authentication Middleware` to identify user.
+
+You should put `actix_casbin_auth::CasbinVals` which contains `subject`(username) and `domain`(optional) into [Extension](https://docs.rs/actix-web/2.0.0/actix_web/dev/struct.Extensions.html).
+
+For example:
+
+```rust
+use std::cell::RefCell;
+use std::pin::Pin;
+use std::rc::Rc;
+use std::task::{Context, Poll};
+
+use actix_service::{Service, Transform};
+use actix_web::{dev::ServiceRequest, dev::ServiceResponse, Error, HttpMessage};
+use futures::future::{ok, Future, Ready};
+
+use actix_casbin_auth::CasbinVals;
+
+
+pub struct FakeAuth;
+
+impl<S: 'static, B> Transform<S> for FakeAuth
+    where
+        S: Service<Request = ServiceRequest, Response = ServiceResponse<B>, Error = Error>,
+        S::Future: 'static,
+        B: 'static,
+{
+    type Request = ServiceRequest;
+    type Response = ServiceResponse<B>;
+    type Error = Error;
+    type InitError = ();
+    type Transform = FakeAuthMiddleware<S>;
+    type Future = Ready<Result<Self::Transform, Self::InitError>>;
+
+    fn new_transform(&self, service: S) -> Self::Future {
+        ok(FakeAuthMiddleware {
+            service: Rc::new(RefCell::new(service)),
+        })
+    }
+}
+
+pub struct FakeAuthMiddleware<S> {
+    service: Rc<RefCell<S>>,
+}
+
+impl<S, B> Service for FakeAuthMiddleware<S>
+    where
+        S: Service<Request = ServiceRequest, Response = ServiceResponse<B>, Error = Error> + 'static,
+        S::Future: 'static,
+        B: 'static,
+{
+    type Request = ServiceRequest;
+    type Response = ServiceResponse<B>;
+    type Error = Error;
+    type Future = Pin<Box<dyn Future<Output = Result<Self::Response, Self::Error>>>>;
+
+    fn poll_ready(&mut self, cx: &mut Context) -> Poll<Result<(), Self::Error>> {
+        self.service.poll_ready(cx)
+    }
+
+    fn call(&mut self, req: ServiceRequest) -> Self::Future {
+        let mut svc = self.service.clone();
+
+        Box::pin(async move {
+            let vals = CasbinVals {
+                subject: String::from("alice"),
+                domain: None,
+            };
+            req.extensions_mut().insert(vals);
+            let res = svc.call(req).await;
+            res
+        })
+    }
+}
+````
+
+
+# Example
+
+```rust
+use actix_web::{web, App, HttpServer, HttpResponse};
+use actix_casbin_auth::CasbinService;
+use casbin::function_map::key_match2;
+use casbin::CoreApi;
+use casbin::{DefaultModel, FileAdapter};
+
+#[actix_rt::main]
+async fn main() -> std::io::Result<()> {
+    std::env::set_var("RUST_LOG", "actix_web=debug");
+    env_logger::init();
+    let m = DefaultModel::from_file("examples/rbac_with_pattern_model.conf")
+    .await
+    .unwrap();
+    let a = FileAdapter::new("examples/rbac_with_pattern_policy.csv");
+
+    let casbin_middleware = CasbinService::new(m, a).await;
+
+    casbin_middleware
+        .write()
+        .await
+        .add_matching_fn(key_match2)
+        .unwrap();
+
+    HttpServer::new(move || {
+        App::new()
+            .wrap(casbin_middleware.clone())
+            .wrap(FakeAuth)          
+            .route("/pen/1", web::get().to(|| HttpResponse::Ok()))
+            .route("/book/{id}", web::get().to(|| HttpResponse::Ok()))
+    })
+    .bind("127.0.0.1:8080")?
+    .run()
+    .await
+}
+```
+
+## License
+
+This project is licensed under
+
+* Apache License, Version 2.0, ([LICENSE-APACHE](LICENSE-APACHE) or [http://www.apache.org/licenses/LICENSE-2.0](http://www.apache.org/licenses/LICENSE-2.0))
