@@ -9,7 +9,7 @@ on:
 jobs:
   release:
     name: Auto Release by Tags
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout Repository
@@ -20,7 +20,7 @@ jobs:
         with:
           profile: minimal
           toolchain: stable
-          default: true
+          override: true
 
       - name: Cargo Login
         uses: actions-rs/cargo@v1
