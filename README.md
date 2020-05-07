@@ -18,7 +18,7 @@ actix-rt = "1.1.0"
 actix-web = "2.0.0"
 ```
 
-# Requirement
+## Requirement
 
 **Casbin only takes charge of permission control**, so you need to implement an `Authentication Middleware` to identify user.
 
@@ -97,7 +97,7 @@ impl<S, B> Service for FakeAuthMiddleware<S>
 ````
 
 
-# Example
+## Example
 
 ```rust
 use actix_web::{web, App, HttpServer, HttpResponse};

@@ -1,26 +1,26 @@
 #![allow(clippy::type_complexity)]
 
+use std::cell::RefCell;
+use std::ops::{Deref, DerefMut};
 use std::pin::Pin;
+use std::rc::Rc;
+use std::sync::Arc;
 use std::task::{Context, Poll};
+
+use futures::future::{ok, Ready};
+use futures::Future;
 
 use actix_service::{Service, Transform};
 use actix_web::{dev::ServiceRequest, dev::ServiceResponse, Error, HttpMessage, HttpResponse};
-use futures::future::{ok, Ready};
-use futures::Future;
-use std::ops::{Deref, DerefMut};
 
-use casbin::prelude::{Enforcer, TryIntoAdapter, TryIntoModel};
-use casbin::CoreApi;
-use std::sync::Arc;
+use casbin::prelude::{TryIntoAdapter, TryIntoModel};
+use casbin::{CachedEnforcer, CoreApi};
 
 #[cfg(feature = "runtime-tokio")]
 use tokio::sync::RwLock;
 
 #[cfg(feature = "runtime-async-std")]
 use async_std::sync::RwLock;
-
-use std::cell::RefCell;
-use std::rc::Rc;
 
 #[derive(Clone)]
 pub struct CasbinVals {
@@ -30,12 +30,12 @@ pub struct CasbinVals {
 
 #[derive(Clone)]
 pub struct CasbinService {
-    enforcer: Arc<RwLock<Enforcer>>,
+    enforcer: Arc<RwLock<CachedEnforcer>>,
 }
 
 impl CasbinService {
     pub async fn new<M: TryIntoModel, A: TryIntoAdapter>(m: M, a: A) -> Self {
-        let enforcer: Enforcer = Enforcer::new(m, a).await.unwrap();
+        let enforcer: CachedEnforcer = CachedEnforcer::new(m, a).await.unwrap();
         CasbinService {
             enforcer: Arc::new(RwLock::new(enforcer)),
         }
@@ -64,7 +64,7 @@ where
 }
 
 impl Deref for CasbinService {
-    type Target = Arc<RwLock<Enforcer>>;
+    type Target = Arc<RwLock<CachedEnforcer>>;
 
     fn deref(&self) -> &Self::Target {
         &self.enforcer
@@ -79,7 +79,7 @@ impl DerefMut for CasbinService {
 
 pub struct CasbinMiddleware<S> {
     service: Rc<RefCell<S>>,
-    enforcer: Arc<RwLock<Enforcer>>,
+    enforcer: Arc<RwLock<CachedEnforcer>>,
 }
 
 impl<S, B> Service for CasbinMiddleware<S>
