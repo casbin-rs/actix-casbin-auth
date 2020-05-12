@@ -64,8 +64,7 @@ where
                 domain: None,
             };
             req.extensions_mut().insert(vals);
-            let res = svc.call(req).await;
-            res
+            svc.call(req).await
         })
     }
 }
