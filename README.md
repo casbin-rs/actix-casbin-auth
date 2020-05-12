@@ -12,9 +12,8 @@
 Add it to `Cargo.toml`
 
 ```rust
-casbin = { version = "0.6.2", default-features = false }
-actix-casbin-auth = "0.1.1"
-actix-rt = "1.1.0"
+actix-casbin-auth = "0.2.0"
+actix-rt = "1.1.1"
 actix-web = "2.0.0"
 ```
 
@@ -89,8 +88,7 @@ impl<S, B> Service for FakeAuthMiddleware<S>
                 domain: None,
             };
             req.extensions_mut().insert(vals);
-            let res = svc.call(req).await;
-            res
+            svc.call(req).await
         })
     }
 }
@@ -100,28 +98,25 @@ impl<S, B> Service for FakeAuthMiddleware<S>
 ## Example
 
 ```rust
-use actix_web::{web, App, HttpServer, HttpResponse};
+use actix_casbin_auth::casbin::function_map::key_match2;
+use actix_casbin_auth::casbin::{CoreApi, DefaultModel, FileAdapter, Result};
 use actix_casbin_auth::CasbinService;
-use casbin::function_map::key_match2;
-use casbin::CoreApi;
-use casbin::{DefaultModel, FileAdapter};
+use actix_web::{web, App, HttpResponse, HttpServer};
+
+#[allow(dead_code)]
+mod fake_auth;
 
 #[actix_rt::main]
-async fn main() -> std::io::Result<()> {
-    std::env::set_var("RUST_LOG", "actix_web=debug");
-    env_logger::init();
-    let m = DefaultModel::from_file("examples/rbac_with_pattern_model.conf")
-    .await
-    .unwrap();
-    let a = FileAdapter::new("examples/rbac_with_pattern_policy.csv");
+async fn main() -> Result<()> {
+    let m = DefaultModel::from_file("examples/rbac_with_pattern_model.conf").await?;
+    let a = FileAdapter::new("examples/rbac_with_pattern_policy.csv");  //You can also use diesel-adapter or sqlx-adapter
 
     let casbin_middleware = CasbinService::new(m, a).await;
 
     casbin_middleware
         .write()
         .await
-        .add_matching_fn(key_match2)
-        .unwrap();
+        .add_matching_fn(key_match2)?;
 
     HttpServer::new(move || {
         App::new()
@@ -132,7 +127,9 @@ async fn main() -> std::io::Result<()> {
     })
     .bind("127.0.0.1:8080")?
     .run()
-    .await
+    .await?;
+
+    Ok(())
 }
 ```
 

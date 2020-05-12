@@ -62,8 +62,7 @@ where
                 domain: Option::from(String::from("domain1")),
             };
             req.extensions_mut().insert(vals);
-            let res = svc.call(req).await;
-            res
+            svc.call(req).await
         })
     }
 }
