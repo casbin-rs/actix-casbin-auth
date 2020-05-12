@@ -12,9 +12,8 @@
 Add it to `Cargo.toml`
 
 ```rust
-casbin = { version = "0.6.2", default-features = false }
 actix-casbin-auth = "0.1.1"
-actix-rt = "1.1.0"
+actix-rt = "1.1.1"
 actix-web = "2.0.0"
 ```
 
@@ -102,9 +101,9 @@ impl<S, B> Service for FakeAuthMiddleware<S>
 ```rust
 use actix_web::{web, App, HttpServer, HttpResponse};
 use actix_casbin_auth::CasbinService;
-use casbin::function_map::key_match2;
-use casbin::CoreApi;
-use casbin::{DefaultModel, FileAdapter};
+use actix_casbin_auth::casbin::function_map::key_match2;
+use actix_casbin_auth::casbin::CoreApi;
+use actix_casbin_auth::casbin::{DefaultModel, FileAdapter};
 
 #[actix_rt::main]
 async fn main() -> std::io::Result<()> {

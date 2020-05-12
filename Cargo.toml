@@ -21,7 +21,7 @@ actix-service = "1.0.5"
 futures = "0.3.4"
 
 [features]
-default = ["runtime-tokio"]
+default = ["runtime-async-std"]
 
 runtime-tokio = ["casbin/runtime-tokio", "tokio/sync"]
 runtime-async-std = ["casbin/runtime-async-std", "async-std/std"]
@@ -29,4 +29,4 @@ runtime-async-std = ["casbin/runtime-async-std", "async-std/std"]
 [dev-dependencies]
 tokio = { version = "0.2.20", features = [ "full" ] }
 async-std = { version = "1.5.0", features = [ "attributes" ] }
-actix-rt = "1.1.0"
+actix-rt = "1.1.1"
