@@ -5,5 +5,4 @@ p, pen_admin, pen_group, GET
 
 g, alice, book_admin
 g, bob, pen_admin
-g2, /book/:id, book_group
-g2, /pen/:id, pen_group
+g, /book/2, book_group

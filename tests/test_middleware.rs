@@ -10,7 +10,7 @@ use futures::future::{ok, Future, Ready};
 use actix_casbin_auth::{CasbinService, CasbinVals};
 
 use actix_web::{test, web, App};
-use casbin::function_map::key_match2;
+//use casbin::function_map::key_match2;
 use casbin::CoreApi;
 use casbin::{DefaultModel, FileAdapter};
 
@@ -78,11 +78,9 @@ async fn test_middleware() {
 
     let casbin_middleware = CasbinService::new(m, a).await;
 
-    casbin_middleware
-        .write()
-        .await
-        .add_matching_fn(key_match2)
-        .unwrap();
+    casbin_middleware.write().await;
+    //.add_matching_fn(key_match2)
+    //.unwrap();
 
     let mut app = test::init_service(
         App::new()

@@ -116,7 +116,7 @@ where
             if !vals.subject.is_empty() {
                 if let Some(domain) = &vals.domain {
                     let lock = cloned_enforcer.write().await;
-                    match lock.enforce(&[subject, domain, &path, &action]).await {
+                    match lock.enforce(&[subject, domain, &path, &action]) {
                         Ok(true) => {
                             let fut_res = srv.call(req);
                             fut_res.await
@@ -130,7 +130,7 @@ where
                     }
                 } else {
                     let lock = cloned_enforcer.write().await;
-                    match lock.enforce(&[subject, &path, &action]).await {
+                    match lock.enforce(&[subject, &path, &action]) {
                         Ok(true) => {
                             let fut_res = srv.call(req);
                             fut_res.await
