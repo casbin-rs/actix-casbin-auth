@@ -1,6 +1,6 @@
 [package]
 name = "actix-casbin-auth"
-version = "0.2.0"
+version = "0.2.1"
 authors = ["Eason Chai <hackerchai.com@gmail.com>","Cheng JIANG <jiang.cheng@vip.163.com>"]
 edition = "2018"
 license = "Apache-2.0"
@@ -14,8 +14,8 @@ path = "src/lib.rs"
 
 [dependencies]
 casbin = { version = "1.0.0", default-features = false, features = ["incremental", "cached"] }
-tokio = { version = "0.2.20", default-features = false, optional = true }
-async-std = { version = "1.5.0", default-features = false, optional = true }
+tokio = { version = "0.2.21", default-features = false, optional = true }
+async-std = { version = "1.6.2", default-features = false, optional = true }
 actix-web = "2.0.0"
 actix-service = "1.0.5"
 futures = "0.3.5"
@@ -28,5 +28,5 @@ runtime-async-std = ["casbin/runtime-async-std", "async-std/std"]
 
 [dev-dependencies]
 tokio = { version = "0.2.21", features = [ "full" ] }
-async-std = { version = "1.6.1", features = [ "attributes" ] }
+async-std = { version = "1.6.2", features = [ "attributes" ] }
 actix-rt = "1.1.1"

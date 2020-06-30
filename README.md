@@ -12,7 +12,7 @@
 Add it to `Cargo.toml`
 
 ```rust
-actix-casbin-auth = "0.2.0"
+actix-casbin-auth = "0.2.1"
 actix-rt = "1.1.1"
 actix-web = "2.0.0"
 ```
@@ -98,8 +98,7 @@ impl<S, B> Service for FakeAuthMiddleware<S>
 ## Example
 
 ```rust
-use actix_casbin_auth::casbin::function_map::key_match2;
-use actix_casbin_auth::casbin::{CoreApi, DefaultModel, FileAdapter, Result};
+use actix_casbin_auth::casbin::{DefaultModel, FileAdapter, Result};
 use actix_casbin_auth::CasbinService;
 use actix_web::{web, App, HttpResponse, HttpServer};
 
@@ -108,15 +107,12 @@ mod fake_auth;
 
 #[actix_rt::main]
 async fn main() -> Result<()> {
-    let m = DefaultModel::from_file("examples/rbac_with_pattern_model.conf").await?;
-    let a = FileAdapter::new("examples/rbac_with_pattern_policy.csv");  //You can also use diesel-adapter or sqlx-adapter
+    let m = DefaultModel::from_file("examples/rbac_restful_keymatch2_model.conf").await?;
+    let a = FileAdapter::new("examples/rbac_restful_keymatch2_policy.csv");  //You can also use diesel-adapter or sqlx-adapter
 
     let casbin_middleware = CasbinService::new(m, a).await;
 
-    casbin_middleware
-        .write()
-        .await
-        .add_matching_fn(key_match2)?;
+    casbin_middleware.write().await;
 
     HttpServer::new(move || {
         App::new()
