@@ -13,7 +13,7 @@ name = "actix_casbin_auth"
 path = "src/lib.rs"
 
 [dependencies]
-casbin = { version = "1.0.0", default-features = false, features = ["incremental", "cached"] }
+casbin = { version = "1.1.0", default-features = false, features = ["incremental", "cached"] }
 tokio = { version = "0.2.21", default-features = false, optional = true }
 async-std = { version = "1.6.2", default-features = false, optional = true }
 actix-web = "2.0.0"
