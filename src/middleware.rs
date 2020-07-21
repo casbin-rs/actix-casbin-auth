@@ -40,6 +40,10 @@ impl CasbinService {
             enforcer: Arc::new(RwLock::new(enforcer)),
         }
     }
+
+    pub async fn get_enforcer(&self) -> Arc<RwLock<CachedEnforcer>> {
+        self.enforcer.clone()
+    }
 }
 
 impl<S, B> Transform<S> for CasbinService
