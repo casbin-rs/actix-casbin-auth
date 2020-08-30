@@ -76,7 +76,7 @@ where
 }
 
 #[actix_rt::test]
-async fn test_middleware() {
+async fn test_set_enforcer() {
     let m = DefaultModel::from_file("examples/rbac_restful_keymatch2_model.conf")
         .await
         .unwrap();
@@ -84,9 +84,7 @@ async fn test_middleware() {
 
     let enforcer = Arc::new(RwLock::new(CachedEnforcer::new(m, a).await.unwrap()));
 
-    let casbin_middleware = CasbinService::set_enforcer(enforcer).await;
-
-    casbin_middleware.write().await;
+    let casbin_middleware = CasbinService::set_enforcer(enforcer);
 
     let mut app = test::init_service(
         App::new()

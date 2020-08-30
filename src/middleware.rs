@@ -41,11 +41,11 @@ impl CasbinService {
         }
     }
 
-    pub async fn get_enforcer(&mut self) -> Arc<RwLock<CachedEnforcer>> {
+    pub fn get_enforcer(&mut self) -> Arc<RwLock<CachedEnforcer>> {
         self.enforcer.clone()
     }
 
-    pub async fn set_enforcer(e: Arc<RwLock<CachedEnforcer>>) -> Self {
+    pub fn set_enforcer(e: Arc<RwLock<CachedEnforcer>>) -> CasbinService {
         CasbinService { enforcer: e }
     }
 }
@@ -126,13 +126,15 @@ where
                     let lock = cloned_enforcer.write().await;
                     match lock.enforce(&[subject, domain, &path, &action]) {
                         Ok(true) => {
-                            let fut_res = srv.call(req);
-                            fut_res.await
+                            drop(lock);
+                            srv.call(req).await
                         }
                         Ok(false) => {
+                            drop(lock);
                             Ok(req.into_response(HttpResponse::Forbidden().finish().into_body()))
                         }
                         Err(_) => {
+                            drop(lock);
                             Ok(req.into_response(HttpResponse::BadGateway().finish().into_body()))
                         }
                     }
@@ -140,13 +142,15 @@ where
                     let lock = cloned_enforcer.write().await;
                     match lock.enforce(&[subject, &path, &action]) {
                         Ok(true) => {
-                            let fut_res = srv.call(req);
-                            fut_res.await
+                            drop(lock);
+                            srv.call(req).await
                         }
                         Ok(false) => {
+                            drop(lock);
                             Ok(req.into_response(HttpResponse::Forbidden().finish().into_body()))
                         }
                         Err(_) => {
+                            drop(lock);
                             Ok(req.into_response(HttpResponse::BadGateway().finish().into_body()))
                         }
                     }

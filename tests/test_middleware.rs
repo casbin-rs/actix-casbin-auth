@@ -76,11 +76,9 @@ async fn test_middleware() {
 
     let casbin_middleware = CasbinService::new(m, a).await;
 
-    casbin_middleware.write().await;
-
     let mut app = test::init_service(
         App::new()
-            .wrap(casbin_middleware)
+            .wrap(casbin_middleware.clone())
             .wrap(FakeAuth)
             .route("/pen/1", web::get().to(|| HttpResponse::Ok()))
             .route("/book/{id}", web::get().to(|| HttpResponse::Ok())),

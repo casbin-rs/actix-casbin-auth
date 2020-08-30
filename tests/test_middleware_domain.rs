@@ -78,7 +78,7 @@ async fn test_middleware() {
 
     let mut app = test::init_service(
         App::new()
-            .wrap(casbin_middleware)
+            .wrap(casbin_middleware.clone())
             .wrap(FakeAuth)
             .route("/pen/1", web::get().to(|| HttpResponse::Ok()))
             .route("/book/1", web::get().to(|| HttpResponse::Ok())),
