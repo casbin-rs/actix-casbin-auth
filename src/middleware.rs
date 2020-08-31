@@ -119,12 +119,12 @@ where
                     return Ok(req.into_response(HttpResponse::Unauthorized().finish().into_body()))
                 }
             };
-            let subject = &vals.subject;
+            let subject = vals.subject.clone();
 
             if !vals.subject.is_empty() {
-                if let Some(domain) = &vals.domain {
+                if let Some(domain) = vals.domain {
                     let lock = cloned_enforcer.write().await;
-                    match lock.enforce(&[subject, domain, &path, &action]) {
+                    match lock.enforce(vec![subject, domain, path, action]) {
                         Ok(true) => {
                             drop(lock);
                             srv.call(req).await
@@ -140,7 +140,7 @@ where
                     }
                 } else {
                     let lock = cloned_enforcer.write().await;
-                    match lock.enforce(&[subject, &path, &action]) {
+                    match lock.enforce(vec![subject, path, action]) {
                         Ok(true) => {
                             drop(lock);
                             srv.call(req).await
