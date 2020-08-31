@@ -10,6 +10,7 @@ use futures::future::{ok, Future, Ready};
 use actix_casbin_auth::{CasbinService, CasbinVals};
 
 use actix_web::{test, web, App};
+use casbin::function_map::key_match2;
 use casbin::{CachedEnforcer, CoreApi, DefaultModel, FileAdapter};
 
 use std::sync::Arc;
@@ -77,18 +78,26 @@ where
 
 #[actix_rt::test]
 async fn test_set_enforcer() {
-    let m = DefaultModel::from_file("examples/rbac_restful_keymatch2_model.conf")
+    let m = DefaultModel::from_file("examples/rbac_with_pattern_model.conf")
         .await
         .unwrap();
-    let a = FileAdapter::new("examples/rbac_restful_keymatch2_policy.csv");
+    let a = FileAdapter::new("examples/rbac_with_pattern_policy.csv");
 
     let enforcer = Arc::new(RwLock::new(CachedEnforcer::new(m, a).await.unwrap()));
 
     let casbin_middleware = CasbinService::set_enforcer(enforcer);
 
+    casbin_middleware
+        .write()
+        .await
+        .get_role_manager()
+        .write()
+        .unwrap()
+        .matching_fn(Some(key_match2), None);
+
     let mut app = test::init_service(
         App::new()
-            .wrap(casbin_middleware)
+            .wrap(casbin_middleware.clone())
             .wrap(FakeAuth)
             .route("/pen/1", web::get().to(|| HttpResponse::Ok()))
             .route("/book/{id}", web::get().to(|| HttpResponse::Ok())),
