@@ -12,7 +12,7 @@
 Add it to `Cargo.toml`
 
 ```rust
-actix-casbin-auth = "0.4.0"
+actix-casbin-auth = "0.4.1"
 actix-rt = "1.1.1"
 actix-web = "2.0.0"
 ```
@@ -107,10 +107,20 @@ mod fake_auth;
 
 #[actix_rt::main]
 async fn main() -> Result<()> {
-    let m = DefaultModel::from_file("examples/rbac_restful_keymatch2_model.conf").await?;
-    let a = FileAdapter::new("examples/rbac_restful_keymatch2_policy.csv");  //You can also use diesel-adapter or sqlx-adapter
+    let m = DefaultModel::from_file("examples/rbac_with_pattern_model.conf")
+        .await
+        .unwrap();
+    let a = FileAdapter::new("examples/rbac_with_pattern_policy.csv");  //You can also use diesel-adapter or sqlx-adapter
 
     let casbin_middleware = CasbinService::new(m, a).await;
+
+    casbin_middleware
+        .write()
+        .await
+        .get_role_manager()
+        .write()
+        .unwrap()
+        .matching_fn(Some(key_match2), None);
 
     HttpServer::new(move || {
         App::new()
