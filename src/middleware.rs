@@ -11,10 +11,12 @@ use futures::future::{ok, Ready};
 use futures::Future;
 
 use actix_service::{Service, Transform};
-use actix_web::{dev::ServiceRequest, dev::ServiceResponse, Error, HttpMessage, HttpResponse};
+use actix_web::{
+    dev::ServiceRequest, dev::ServiceResponse, Error, HttpMessage, HttpResponse, Result,
+};
 
 use casbin::prelude::{TryIntoAdapter, TryIntoModel};
-use casbin::{CachedEnforcer, CoreApi};
+use casbin::{CachedEnforcer, CoreApi, Result as CasbinResult};
 
 #[cfg(feature = "runtime-tokio")]
 use tokio::sync::RwLock;
@@ -34,11 +36,11 @@ pub struct CasbinService {
 }
 
 impl CasbinService {
-    pub async fn new<M: TryIntoModel, A: TryIntoAdapter>(m: M, a: A) -> Self {
-        let enforcer: CachedEnforcer = CachedEnforcer::new(m, a).await.unwrap();
-        CasbinService {
+    pub async fn new<M: TryIntoModel, A: TryIntoAdapter>(m: M, a: A) -> CasbinResult<Self> {
+        let enforcer: CachedEnforcer = CachedEnforcer::new(m, a).await?;
+        Ok(CasbinService {
             enforcer: Arc::new(RwLock::new(enforcer)),
-        }
+        })
     }
 
     pub fn get_enforcer(&mut self) -> Arc<RwLock<CachedEnforcer>> {

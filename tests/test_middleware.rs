@@ -75,7 +75,7 @@ async fn test_middleware() {
         .unwrap();
     let a = FileAdapter::new("examples/rbac_with_pattern_policy.csv");
 
-    let casbin_middleware = CasbinService::new(m, a).await;
+    let casbin_middleware = CasbinService::new(m, a).await.unwrap();
 
     casbin_middleware
         .write()

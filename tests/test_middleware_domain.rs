@@ -74,7 +74,7 @@ async fn test_middleware() {
         .unwrap();
     let a = FileAdapter::new("examples/rbac_with_domains_policy.csv");
 
-    let casbin_middleware = CasbinService::new(m, a).await;
+    let casbin_middleware = CasbinService::new(m, a).await.unwrap();
 
     let mut app = test::init_service(
         App::new()
