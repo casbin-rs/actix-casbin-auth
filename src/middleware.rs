@@ -125,8 +125,8 @@ where
 
             if !vals.subject.is_empty() {
                 if let Some(domain) = vals.domain {
-                    let lock = cloned_enforcer.write().await;
-                    match lock.enforce(vec![subject, domain, path, action]) {
+                    let mut lock = cloned_enforcer.write().await;
+                    match lock.enforce_mut(vec![subject, domain, path, action]) {
                         Ok(true) => {
                             drop(lock);
                             srv.call(req).await
@@ -141,8 +141,8 @@ where
                         }
                     }
                 } else {
-                    let lock = cloned_enforcer.write().await;
-                    match lock.enforce(vec![subject, path, action]) {
+                    let mut lock = cloned_enforcer.write().await;
+                    match lock.enforce_mut(vec![subject, path, action]) {
                         Ok(true) => {
                             drop(lock);
                             srv.call(req).await
