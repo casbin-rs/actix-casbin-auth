@@ -12,9 +12,9 @@
 Add it to `Cargo.toml`
 
 ```rust
-actix-casbin-auth = "0.4.2"
+actix-casbin-auth = "0.4.3"
 actix-rt = "1.1.1"
-actix-web = "2.0.0"
+actix-web = "3.0.0"
 ```
 
 ## Requirement
