@@ -12,9 +12,10 @@
 Add it to `Cargo.toml`
 
 ```rust
-actix-casbin-auth = "0.4.4"
 actix-rt = "1.1.1"
 actix-web = "3.0.2"
+actix-casbin= {version = "0.4.2", default-features = false, features = [ "runtime-async-std" ]}
+actix-casbin-auth = {version = "0.4.4", default-features = false, features = [ "runtime-async-std" ]}
 ```
 
 ## Requirement
