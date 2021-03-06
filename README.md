@@ -102,6 +102,7 @@ impl<S, B> Service for FakeAuthMiddleware<S>
 use actix_casbin_auth::casbin::{DefaultModel, FileAdapter, Result};
 use actix_casbin_auth::CasbinService;
 use actix_web::{web, App, HttpResponse, HttpServer};
+use actix_casbin_auth::casbin::function_map::key_match2;
 
 #[allow(dead_code)]
 mod fake_auth;
