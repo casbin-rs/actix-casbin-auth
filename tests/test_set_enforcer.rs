@@ -4,7 +4,9 @@ use std::rc::Rc;
 use std::task::{Context, Poll};
 
 use actix_service::{Service, Transform};
-use actix_web::{dev::ServiceRequest, dev::ServiceResponse, Error, HttpMessage, HttpResponse};
+use actix_web::{
+    body::MessageBody, dev::ServiceRequest, dev::ServiceResponse, Error, HttpMessage, HttpResponse,
+};
 use futures::future::{ok, Future, Ready};
 
 use actix_casbin_auth::{CasbinService, CasbinVals};
@@ -23,13 +25,11 @@ use async_std::sync::RwLock;
 
 pub struct FakeAuth;
 
-impl<S: 'static, B> Transform<S> for FakeAuth
+impl<S, B> Transform<S, ServiceRequest> for FakeAuth
 where
-    S: Service<Request = ServiceRequest, Response = ServiceResponse<B>, Error = Error>,
-    S::Future: 'static,
-    B: 'static,
+    S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error> + 'static,
+    B: MessageBody,
 {
-    type Request = ServiceRequest;
     type Response = ServiceResponse<B>;
     type Error = Error;
     type InitError = ();
@@ -47,23 +47,21 @@ pub struct FakeAuthMiddleware<S> {
     service: Rc<RefCell<S>>,
 }
 
-impl<S, B> Service for FakeAuthMiddleware<S>
+impl<S, B> Service<ServiceRequest> for FakeAuthMiddleware<S>
 where
-    S: Service<Request = ServiceRequest, Response = ServiceResponse<B>, Error = Error> + 'static,
-    S::Future: 'static,
-    B: 'static,
+    S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error> + 'static,
+    B: MessageBody,
 {
-    type Request = ServiceRequest;
     type Response = ServiceResponse<B>;
     type Error = Error;
     type Future = Pin<Box<dyn Future<Output = Result<Self::Response, Self::Error>>>>;
 
-    fn poll_ready(&mut self, cx: &mut Context) -> Poll<Result<(), Self::Error>> {
+    fn poll_ready(&self, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
         self.service.poll_ready(cx)
     }
 
-    fn call(&mut self, req: ServiceRequest) -> Self::Future {
-        let mut svc = self.service.clone();
+    fn call(&self, req: ServiceRequest) -> Self::Future {
+        let svc = self.service.clone();
 
         Box::pin(async move {
             let vals = CasbinVals {
