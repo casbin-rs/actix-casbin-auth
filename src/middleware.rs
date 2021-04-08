@@ -12,7 +12,8 @@ use futures::Future;
 
 use actix_service::{Service, Transform};
 use actix_web::{
-    dev::ServiceRequest, dev::ServiceResponse, Error, HttpMessage, HttpResponse, Result,
+    body::MessageBody, dev::ServiceRequest, dev::ServiceResponse, Error, HttpMessage, HttpResponse,
+    Result,
 };
 
 use casbin::prelude::{TryIntoAdapter, TryIntoModel};
@@ -52,13 +53,11 @@ impl CasbinService {
     }
 }
 
-impl<S, B> Transform<S> for CasbinService
+impl<S, B> Transform<S, ServiceRequest> for CasbinService
 where
-    S: Service<Request = ServiceRequest, Response = ServiceResponse<B>, Error = Error> + 'static,
-    S::Future: 'static,
-    B: 'static,
+    S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error> + 'static,
+    B: MessageBody,
 {
-    type Request = ServiceRequest;
     type Response = ServiceResponse<B>;
     type Error = Error;
     type InitError = ();
@@ -92,24 +91,22 @@ pub struct CasbinMiddleware<S> {
     enforcer: Arc<RwLock<CachedEnforcer>>,
 }
 
-impl<S, B> Service for CasbinMiddleware<S>
+impl<S, B> Service<ServiceRequest> for CasbinMiddleware<S>
 where
-    S: Service<Request = ServiceRequest, Response = ServiceResponse<B>, Error = Error> + 'static,
-    S::Future: 'static,
-    B: 'static,
+    S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error> + 'static,
+    B: MessageBody,
 {
-    type Request = ServiceRequest;
     type Response = ServiceResponse<B>;
     type Error = Error;
     type Future = Pin<Box<dyn Future<Output = Result<Self::Response, Self::Error>>>>;
 
-    fn poll_ready(&mut self, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
+    fn poll_ready(&self, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
         self.service.poll_ready(cx)
     }
 
-    fn call(&mut self, req: ServiceRequest) -> Self::Future {
+    fn call(&self, req: ServiceRequest) -> Self::Future {
         let cloned_enforcer = self.enforcer.clone();
-        let mut srv = self.service.clone();
+        let srv = self.service.clone();
 
         Box::pin(async move {
             let path = req.path().to_string();
