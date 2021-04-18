@@ -30,3 +30,11 @@ runtime-async-std = ["casbin/runtime-async-std", "async-std/std"]
 tokio = { version = "1.1.1", features = [ "full" ] }
 async-std = { version = "1.9.0", features = [ "attributes" ] }
 actix-rt = "2.1.0"
+
+[profile.release]
+codegen-units = 1
+lto           = true
+opt-level     = 3
+
+[profile.dev]
+split-debuginfo = "unpacked"
