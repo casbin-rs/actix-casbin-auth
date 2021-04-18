@@ -17,7 +17,7 @@ casbin = { version = "2.0.6", default-features = false, features = ["incremental
 tokio = { version = "1.5.0", default-features = false, optional = true }
 async-std = { version = "1.9.0", default-features = false, optional = true }
 actix-web = { version = "4.0.0-beta.6", default-features = false }
-actix-service = "2.0.0-beta.5"
+actix-service = "2.0.0"
 futures = "0.3"
 
 [features]
