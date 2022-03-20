@@ -90,7 +90,6 @@ async fn test_set_enforcer() {
         .await
         .get_role_manager()
         .write()
-        .unwrap()
         .matching_fn(Some(key_match2), None);
 
     let mut app = test::init_service(

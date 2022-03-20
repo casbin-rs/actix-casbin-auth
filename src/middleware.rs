@@ -2,18 +2,18 @@
 
 use std::cell::RefCell;
 use std::ops::{Deref, DerefMut};
-use std::pin::Pin;
 use std::rc::Rc;
 use std::sync::Arc;
 use std::task::{Context, Poll};
 
-use futures::future::{ok, Ready};
-use futures::Future;
+use futures::future::{ok, LocalBoxFuture, Ready};
+use futures::FutureExt;
 
 use actix_service::{Service, Transform};
 use actix_web::{
-    body::MessageBody, dev::ServiceRequest, dev::ServiceResponse, Error, HttpMessage, HttpResponse,
-    Result,
+    body::{EitherBody, MessageBody},
+    dev::{ServiceRequest, ServiceResponse},
+    Error, HttpMessage, HttpResponse, Result,
 };
 
 use casbin::prelude::{TryIntoAdapter, TryIntoModel};
@@ -58,7 +58,7 @@ where
     S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error> + 'static,
     B: MessageBody,
 {
-    type Response = ServiceResponse<B>;
+    type Response = ServiceResponse<EitherBody<B>>;
     type Error = Error;
     type InitError = ();
     type Transform = CasbinMiddleware<S>;
@@ -96,9 +96,9 @@ where
     S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error> + 'static,
     B: MessageBody,
 {
-    type Response = ServiceResponse<B>;
-    type Error = Error;
-    type Future = Pin<Box<dyn Future<Output = Result<Self::Response, Self::Error>>>>;
+    type Response = ServiceResponse<EitherBody<B>>;
+    type Error = S::Error;
+    type Future = LocalBoxFuture<'static, Result<Self::Response, Self::Error>>;
 
     fn poll_ready(&self, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
         self.service.poll_ready(cx)
@@ -108,14 +108,16 @@ where
         let cloned_enforcer = self.enforcer.clone();
         let srv = self.service.clone();
 
-        Box::pin(async move {
+        async move {
             let path = req.path().to_string();
             let action = req.method().as_str().to_string();
             let option_vals = req.extensions().get::<CasbinVals>().map(|x| x.to_owned());
             let vals = match option_vals {
                 Some(value) => value,
                 None => {
-                    return Ok(req.into_response(HttpResponse::Unauthorized().finish().into_body()))
+                    return Ok(req.into_response(
+                        HttpResponse::Unauthorized().finish().map_into_right_body(),
+                    ))
                 }
             };
             let subject = vals.subject.clone();
@@ -126,15 +128,19 @@ where
                     match lock.enforce_mut(vec![subject, domain, path, action]) {
                         Ok(true) => {
                             drop(lock);
-                            srv.call(req).await
+                            srv.call(req).await.map(|res| res.map_into_left_body())
                         }
                         Ok(false) => {
                             drop(lock);
-                            Ok(req.into_response(HttpResponse::Forbidden().finish().into_body()))
+                            Ok(req.into_response(
+                                HttpResponse::Forbidden().finish().map_into_right_body(),
+                            ))
                         }
                         Err(_) => {
                             drop(lock);
-                            Ok(req.into_response(HttpResponse::BadGateway().finish().into_body()))
+                            Ok(req.into_response(
+                                HttpResponse::BadGateway().finish().map_into_right_body(),
+                            ))
                         }
                     }
                 } else {
@@ -142,21 +148,26 @@ where
                     match lock.enforce_mut(vec![subject, path, action]) {
                         Ok(true) => {
                             drop(lock);
-                            srv.call(req).await
+                            srv.call(req).await.map(|res| res.map_into_left_body())
                         }
                         Ok(false) => {
                             drop(lock);
-                            Ok(req.into_response(HttpResponse::Forbidden().finish().into_body()))
+                            Ok(req.into_response(
+                                HttpResponse::Forbidden().finish().map_into_right_body(),
+                            ))
                         }
                         Err(_) => {
                             drop(lock);
-                            Ok(req.into_response(HttpResponse::BadGateway().finish().into_body()))
+                            Ok(req.into_response(
+                                HttpResponse::BadGateway().finish().map_into_right_body(),
+                            ))
                         }
                     }
                 }
             } else {
-                Ok(req.into_response(HttpResponse::Unauthorized().finish().into_body()))
+                Ok(req.into_response(HttpResponse::Unauthorized().finish().map_into_right_body()))
             }
-        })
+        }
+        .boxed_local()
     }
 }
