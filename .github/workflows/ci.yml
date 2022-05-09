@@ -25,7 +25,7 @@ jobs:
         uses: actions-rs/toolchain@v1
         with:
           profile: minimal
-          toolchain: stable
+          toolchain: ${{ matrix.rust }}
           components: rustfmt, clippy
           override: true
 
@@ -52,12 +52,14 @@ jobs:
           args: --no-default-features --features runtime-async-std
 
       - name: Cargo Clippy
+        if: matrix.os == 'ubuntu-latest' && matrix.rust == 'nightly'
         uses: actions-rs/cargo@v1
         with:
           command: clippy
           args: -- -D warnings
 
       - name: Cargo Fmt Check
+        if: matrix.os == 'ubuntu-latest' && matrix.rust == 'nightly'
         uses: actions-rs/cargo@v1
         with:
           command: fmt
