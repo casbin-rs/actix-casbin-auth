@@ -43,11 +43,10 @@ pub struct FakeAuth;
 
 impl<S: 'static, B> Transform<S> for FakeAuth
     where
-        S: Service<Request = ServiceRequest, Response = ServiceResponse<B>, Error = Error>,
+        S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error>,
         S::Future: 'static,
         B: 'static,
 {
-    type Request = ServiceRequest;
     type Response = ServiceResponse<B>;
     type Error = Error;
     type InitError = ();
@@ -67,11 +66,10 @@ pub struct FakeAuthMiddleware<S> {
 
 impl<S, B> Service for FakeAuthMiddleware<S>
     where
-        S: Service<Request = ServiceRequest, Response = ServiceResponse<B>, Error = Error> + 'static,
+        S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error> + 'static,
         S::Future: 'static,
         B: 'static,
 {
-    type Request = ServiceRequest;
     type Response = ServiceResponse<B>;
     type Error = Error;
     type Future = Pin<Box<dyn Future<Output = Result<Self::Response, Self::Error>>>>;
