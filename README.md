@@ -1,6 +1,6 @@
 # Actix Casbin Middleware
 
-[![Crates.io](https://meritbadge.herokuapp.com/actix-casbin-auth)](https://crates.io/crates/actix-casbin-auth)
+[![Crates.io](https://img.shields.io/crates/d/actix-casbin-auth)](https://crates.io/crates/actix-casbin-auth)
 [![Docs](https://docs.rs/actix-casbin-auth/badge.svg)](https://docs.rs/actix-casbin-auth)
 [![CI](https://github.com/casbin-rs/actix-casbin-auth/workflows/CI/badge.svg)](https://github.com/casbin-rs/actix-casbin-auth/actions)
 [![codecov](https://codecov.io/gh/casbin-rs/actix-casbin-auth/branch/master/graph/badge.svg)](https://codecov.io/gh/casbin-rs/actix-casbin-auth)
