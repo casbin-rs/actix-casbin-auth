@@ -9,13 +9,13 @@
 
 ## Install
 
-Add it to `Cargo.toml`
+Add dependencies
 
-```toml
-actix-rt = "1.1.1"
-actix-web = "3.0.2"
-actix-casbin= {version = "0.4.2", default-features = false, features = [ "runtime-async-std" ]}
-actix-casbin-auth = {version = "0.4.4", default-features = false, features = [ "runtime-async-std" ]}
+```bash
+cargo add actix-rt
+cargo add actix-web
+cargo add actix-casbin --no-default-features --features runtime-async-std
+cargo add actix-casbin-auth --no-default-features --features runtime-async-std
 ```
 
 ## Requirement
