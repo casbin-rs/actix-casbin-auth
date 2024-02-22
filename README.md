@@ -2,7 +2,7 @@
 
 [![Crates.io](https://img.shields.io/crates/d/actix-casbin-auth)](https://crates.io/crates/actix-casbin-auth)
 [![Docs](https://docs.rs/actix-casbin-auth/badge.svg)](https://docs.rs/actix-casbin-auth)
-[![CI](https://github.com/casbin-rs/actix-casbin-auth/workflows/CI/badge.svg)](https://github.com/casbin-rs/actix-casbin-auth/actions)
+[![CI](https://github.com/casbin-rs/actix-casbin-auth/actions/workflows/ci.yml/badge.svg)](https://github.com/casbin-rs/actix-casbin-auth/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/gh/casbin-rs/actix-casbin-auth/branch/master/graph/badge.svg)](https://codecov.io/gh/casbin-rs/actix-casbin-auth)
 
 [Casbin](https://github.com/casbin/casbin-rs) access control middleware for [actix-web](https://github.com/actix/actix-web) framework
@@ -11,7 +11,7 @@
 
 Add it to `Cargo.toml`
 
-```rust
+```toml
 actix-rt = "1.1.1"
 actix-web = "3.0.2"
 actix-casbin= {version = "0.4.2", default-features = false, features = [ "runtime-async-std" ]}

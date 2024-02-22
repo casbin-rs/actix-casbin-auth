@@ -1,4 +1,4 @@
-name: Auto Build
+name: CI
 
 on:
   push:
