@@ -13,54 +13,37 @@ jobs:
     name: Auto Build CI
     runs-on: ${{ matrix.os }}
     strategy:
-        matrix:
-            os: [ubuntu-latest, windows-latest, macOS-latest]
-            rust: [nightly, beta, stable]
+      matrix:
+        os: [ubuntu-latest, windows-latest, macOS-latest]
+        rust: [nightly, beta, stable]
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@master
+        uses: actions/checkout@v4
 
       - name: Install Rust toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: ${{ matrix.rust }}
-          components: rustfmt, clippy
-          override: true
+        run: |
+          rustup set profile minimal
+          rustup update --no-self-update ${{ matrix.rust }}
+          rustup component add --toolchain ${{ matrix.rust }} rustfmt clippy
+          rustup default ${{ matrix.rust }}
 
       - name: Install Dependencies (for ubuntu)
         if: matrix.os == 'ubuntu-latest'
         run: |
-            sudo apt-get install libssl-dev
+          sudo apt-get install libssl-dev
 
       - name: Cargo Build
-        uses: actions-rs/cargo@v1
-        with:
-          command: build
+        run: cargo build
 
       - name: Cargo Test For tokio
-        uses: actions-rs/cargo@v1
-        with:
-          command: test
-          args: --no-default-features --features runtime-tokio rt
+        run: cargo test --no-default-features --features runtime-tokio rt
 
       - name: Cargo Test For async-std
-        uses: actions-rs/cargo@v1
-        with:
-          command: test
-          args: --no-default-features --features runtime-async-std
+        run: cargo test --no-default-features --features runtime-async-std
 
       - name: Cargo Clippy
-        if: matrix.os == 'ubuntu-latest' && matrix.rust == 'nightly'
-        uses: actions-rs/cargo@v1
-        with:
-          command: clippy
-          args: -- -D warnings
+        run: cargo clippy -- -D warnings
 
       - name: Cargo Fmt Check
-        if: matrix.os == 'ubuntu-latest' && matrix.rust == 'nightly'
-        uses: actions-rs/cargo@v1
-        with:
-          command: fmt
-          args: --all -- --check
+        run: cargo fmt --all -- --check
