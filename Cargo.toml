@@ -22,6 +22,8 @@ futures = "0.3"
 
 [features]
 default = ["runtime-tokio"]
+explain = ["casbin/explain"]
+logging = ["casbin/logging"] 
 
 runtime-tokio = ["casbin/runtime-tokio", "tokio/sync"]
 runtime-async-std = ["casbin/runtime-async-std", "async-std/std"]
