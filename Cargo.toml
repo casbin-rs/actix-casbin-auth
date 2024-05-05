@@ -5,7 +5,7 @@ authors = ["Eason Chai <hackerchai.com@gmail.com>","Cheng JIANG <jiang.cheng@vip
 edition = "2018"
 license = "Apache-2.0"
 description = "Casbin actix-web access control middleware"
-homepage= "https://github.com/casbin-rs/actix-casbin-auth"
+repository = "https://github.com/casbin-rs/actix-casbin-auth"
 readme= "README.md"
 
 [lib]
